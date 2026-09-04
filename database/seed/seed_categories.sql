@@ -1,0 +1,22 @@
+INSERT INTO categories (name, slug, description, sort_order) VALUES
+  ('AI', 'ai', 'Artificial intelligence projects', 1),
+  ('IoT', 'iot', 'Internet of Things projects', 2),
+  ('Robotics', 'robotics', 'Robotics and automation projects', 3),
+  ('Physics', 'physics', 'Physics research and prototypes', 4),
+  ('Healthcare', 'healthcare', 'Health and medical innovation projects', 5),
+  ('Machine Learning', 'machine-learning', 'Machine learning projects', 6),
+  ('Deep Learning', 'deep-learning', 'Deep learning projects', 7),
+  ('Data Science', 'data-science', 'Data science projects', 8),
+  ('Chemistry', 'chemistry', 'Chemistry projects', 9),
+  ('Biology', 'biology', 'Biology projects', 10),
+  ('Cyber Security', 'cyber-security', 'Security and privacy projects', 11),
+  ('Blockchain', 'blockchain', 'Blockchain projects', 12),
+  ('Cloud Computing', 'cloud-computing', 'Cloud and distributed systems projects', 13),
+  ('Agriculture', 'agriculture', 'Agri-tech projects', 14),
+  ('Education', 'education', 'Education technology projects', 15),
+  ('Environment', 'environment', 'Environment and sustainability projects', 16),
+  ('Renewable Energy', 'renewable-energy', 'Renewable energy projects', 17),
+  ('Electronics', 'electronics', 'Electronics projects', 18),
+  ('Mechanical', 'mechanical', 'Mechanical engineering projects', 19),
+  ('Civil Engineering', 'civil-engineering', 'Civil engineering projects', 20)
+ON CONFLICT (slug) DO NOTHING;

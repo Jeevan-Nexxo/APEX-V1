@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120) NOT NULL UNIQUE,
+    slug VARCHAR(140) NOT NULL UNIQUE,
+    description TEXT,
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Ensure all columns exist for tables created by older schema versions
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS name VARCHAR(120);
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS slug VARCHAR(140);
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS description TEXT;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS sort_order INTEGER DEFAULT 0;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE categories ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+CREATE INDEX IF NOT EXISTS idx_categories_active ON categories(is_active);
+CREATE INDEX IF NOT EXISTS idx_categories_sort_order ON categories(sort_order);

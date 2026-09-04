@@ -1,0 +1,2 @@
+-- Removed: role_permissions and permissions tables were never used.
+-- RBAC is handled by the roleMiddleware which checks the users.role column directly.
