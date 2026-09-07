@@ -407,6 +407,142 @@ router.get("/reviews", ...ensureAdmin, async (_req, res) => {
   }
 });
 
+router.get("/contact-requests", ...ensureAdmin, async (_req, res) => {
+  try {
+    const result = await pool.query(
+      `SELECT cr.id, cr.message, cr.status, cr.created_at, cr.updated_at,
+              p.id AS project_uuid, p.project_id AS project_code, p.title AS project_title,
+              visitor.full_name AS visitor_name,
+              COALESCE(cr.visitor_email, visitor.email) AS visitor_email,
+              vp.phone AS visitor_phone,
+              student.full_name AS student_name,
+              COALESCE(cr.student_email, student.email) AS student_email,
+              replier.full_name AS reviewed_by_name
+       FROM contact_requests cr
+       JOIN projects p ON p.id = cr.project_id
+       JOIN users visitor ON visitor.id = cr.visitor_user_id
+       JOIN users student ON student.id = cr.student_user_id
+       LEFT JOIN visitor_profiles vp ON vp.user_id = cr.visitor_user_id
+       LEFT JOIN users replier ON replier.id = cr.reviewed_by_user_id
+       ORDER BY cr.created_at DESC`
+    );
+
+    return res.json({ success: true, contactRequests: result.rows });
+  } catch (error) {
+    console.error("ADMIN CONTACT REQUESTS ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
+router.post("/contact-requests/:id/approve", ...ensureAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT cr.student_user_id, cr.visitor_user_id, cr.student_email,
+              p.title AS project_title, p.id AS project_uuid,
+              visitor.email AS visitor_email,
+              vp.phone AS visitor_phone
+       FROM contact_requests cr
+       JOIN projects p ON p.id = cr.project_id
+       JOIN users visitor ON visitor.id = cr.visitor_user_id
+       LEFT JOIN visitor_profiles vp ON vp.user_id = cr.visitor_user_id
+       WHERE cr.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Contact request not found." });
+    }
+
+    const cr = result.rows[0];
+
+    const updateRes = await pool.query(
+      `UPDATE contact_requests SET status = 'approved', reviewed_by_user_id = $1, updated_at = NOW()
+       WHERE id = $2 AND status = 'pending'
+       RETURNING id`,
+      [req.user.id, id]
+    );
+
+    if (updateRes.rows.length === 0) {
+      return res.status(400).json({ success: false, message: "This contact request has already been reviewed." });
+    }
+
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, message, link_url)
+       VALUES ($1, 'contact-approved', 'Contact request approved', $2, $3)`,
+      [
+        cr.student_user_id,
+        `Your project "${cr.project_title}" received an approved contact request. Visitor contact details:\n\nEmail: ${cr.visitor_email}\nPhone: ${cr.visitor_phone || "Not provided"}`,
+        `/student/project/${cr.project_uuid}`,
+      ]
+    );
+
+    if (cr.student_email) {
+      try {
+        const { sendEmail } = require("../services/emailServices");
+        sendEmail(
+          cr.student_email,
+          "Contact request approved - APEX",
+          `<p>Your project "<strong>${cr.project_title}</strong>" received an approved contact request. You can now reach the visitor at <strong>${cr.visitor_email}</strong>.</p>`
+        ).catch(() => {});
+      } catch (e) {
+        console.error("CONTACT APPROVE EMAIL ERROR:", e);
+      }
+    }
+
+    return res.json({ success: true, message: "Contact request approved. Visitor contact details shared with the student." });
+  } catch (error) {
+    console.error("ADMIN CONTACT REQUEST APPROVE ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
+router.post("/contact-requests/:id/reject", ...ensureAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT cr.student_user_id,
+              p.title AS project_title, p.id AS project_uuid
+       FROM contact_requests cr
+       JOIN projects p ON p.id = cr.project_id
+       WHERE cr.id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ success: false, message: "Contact request not found." });
+    }
+
+    const cr = result.rows[0];
+
+    const updated = await pool.query(
+      `UPDATE contact_requests SET status = 'rejected', reviewed_by_user_id = $1, updated_at = NOW()
+       WHERE id = $2 AND status = 'pending'
+       RETURNING status`,
+      [req.user.id, id]
+    );
+
+    if (updated.rows.length === 0 || updated.rows[0].status !== "rejected") {
+      return res.status(400).json({ success: false, message: "This contact request has already been reviewed." });
+    }
+
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, message, link_url)
+       VALUES ($1, 'contact-rejected', 'Contact request rejected', $2, $3)`,
+      [
+        cr.student_user_id,
+        `The contact request for your project "${cr.project_title}" was rejected by the admin.`,
+        `/student/project/${cr.project_uuid}`,
+      ]
+    );
+
+    return res.json({ success: true, message: "Contact request rejected." });
+  } catch (error) {
+    console.error("ADMIN CONTACT REQUEST REJECT ERROR:", error);
+    return res.status(500).json({ success: false, message: "Server error." });
+  }
+});
+
 router.get("/analytics", ...ensureAdmin, async (_req, res) => {
   try {
     const result = await pool.query(

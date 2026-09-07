@@ -7,6 +7,7 @@ const links = [
   { to: "/admin/reviews", label: "Reviews", icon: "✅" },
   { to: "/admin/categories", label: "Categories", icon: "🏷️" },
   { to: "/admin/queries", label: "Queries", icon: "💬" },
+  { to: "/admin/contact-requests", label: "Contacts", icon: "📨" },
   { to: "/admin/faq", label: "Help Center", icon: "❓" },
   { to: "/admin/team", label: "Team", icon: "🧠" },
   { to: "/admin/settings", label: "Settings", icon: "⚙️" },

@@ -240,7 +240,7 @@ const getPublicProjects = async (req, res) => {
 
     // Public visitors: only see approved AND is_public projects
     // Verified users: see all approved projects
-    const isVerifiedUser = req.user && req.user.email_verified === true;
+    const isVerifiedUser = req.user && req.user.is_verified === true;
 
     const result = await pool.query(
       `SELECT
@@ -329,7 +329,7 @@ const getProjectById = async (req, res) => {
       }
     } else if (!project.is_public) {
       // Approved but not public: only verified users, staff, or owner can view
-      const isVerified = req.user && req.user.email_verified === true;
+      const isVerified = req.user && req.user.is_verified === true;
       const isStaff = req.user && ["admin", "manager"].includes(req.user.role);
       const isOwner = req.user && project.created_by_user_id === req.user.id;
 

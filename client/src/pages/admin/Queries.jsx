@@ -99,6 +99,11 @@ function AdminQueries() {
               <span>
                 From: <span className="font-medium text-foreground">{selected.sender_name}</span> ({selected.sender_email})
               </span>
+              {selected.sender_phone && (
+                <span>
+                  Phone: <span className="font-medium text-foreground">{selected.sender_phone}</span>
+                </span>
+              )}
               <span className="text-primary-foreground/70">Role: {selected.sender_role}</span>
               <span>
                 {new Date(selected.created_at).toLocaleDateString("en-IN", {

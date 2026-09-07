@@ -93,7 +93,7 @@ router.post("/projects/:id/review", ...ensureManager, async (req, res) => {
     );
 
     await pool.query(
-      `UPDATE projects SET status = $1, reviewed_by_user_id = $2, review_notes = $3,
+      `UPDATE projects SET status = $1::VARCHAR(30), reviewed_by_user_id = $2, review_notes = $3,
        approved_at = CASE WHEN $1 = 'approved' THEN NOW() ELSE NULL END,
        reviewed_at = NOW(), updated_at = NOW()
        WHERE id = $4`,

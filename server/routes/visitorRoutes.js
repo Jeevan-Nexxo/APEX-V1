@@ -144,8 +144,9 @@ router.post("/contact-requests/:projectId", authMiddleware, ensureVisitor, async
     const { message } = req.body;
 
     const projectResult = await pool.query(
-      `SELECT p.id, p.created_by_user_id, p.status
+      `SELECT p.id, p.created_by_user_id, p.status, creator.email AS student_email
        FROM projects p
+       JOIN users creator ON creator.id = p.created_by_user_id
        WHERE p.id = $1`,
       [projectId]
     );
@@ -157,22 +158,20 @@ router.post("/contact-requests/:projectId", authMiddleware, ensureVisitor, async
     const project = projectResult.rows[0];
 
     await pool.query(
-      `INSERT INTO contact_requests (project_id, visitor_user_id, student_user_id, message)
-       VALUES ($1, $2, $3, $4)`,
-      [project.id, req.user.id, project.created_by_user_id, message || null]
+      `INSERT INTO contact_requests (project_id, visitor_user_id, student_user_id, message, visitor_email, student_email)
+       VALUES ($1, $2, $3, $4, $5, $6)`,
+      [project.id, req.user.id, project.created_by_user_id, message || null, req.user.email, project.student_email]
     );
 
+    // Contact requests go to admins — only the admin shares contact details with the student after approval
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, message, link_url)
-       VALUES ($1, 'contact-request', 'New contact request', $2, $3)`,
-      [
-        project.created_by_user_id,
-        `A visitor requested contact regarding project ${project.id}.`,
-        `/student/project/${project.id}`,
-      ]
+       SELECT id, 'contact-request', 'New contact request', $1, '/admin/contact-requests'
+       FROM users WHERE role = 'admin'`,
+      [`A visitor requested contact regarding project ${project.id}.`]
     );
 
-    return res.json({ success: true, message: "Contact request sent successfully." });
+    return res.json({ success: true, message: "Contact request submitted. The admin will review it before your details are shared." });
   } catch (error) {
     console.error("CONTACT REQUEST ERROR:", error);
     return res.status(500).json({ success: false, message: "Server error." });

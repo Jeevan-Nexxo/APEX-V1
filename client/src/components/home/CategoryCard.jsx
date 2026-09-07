@@ -24,7 +24,7 @@ function CategoryCard({ title, count, iconUrl, slug }) {
           <FolderOpen className="h-7 w-7 text-primary transition-transform duration-300 group-hover:scale-110" />
         )}
       </div>
-      <h3 className="mt-3 max-w-full text-center text-base font-semibold leading-tight text-foreground break-words">
+      <h3 className="mt-3 line-clamp-2 max-w-full text-center text-base font-semibold leading-snug text-foreground break-words">
         {title}
       </h3>
       <div className="mt-2 flex items-center gap-1.5 text-center">

@@ -35,6 +35,7 @@ import AdminCategories from "./pages/admin/Categories";
 import AdminTeam from "./pages/admin/Team";
 import AdminSettings from "./pages/admin/Settings";
 import AdminQueries from "./pages/admin/Queries";
+import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminFaq from "./pages/admin/Faq";
 
 import ManagerLayout from "./layouts/ManagerLayout";
@@ -90,6 +91,7 @@ function App() {
         <Route path="reviews" element={<AdminReviews />} />
         <Route path="categories" element={<AdminCategories />} />
         <Route path="queries" element={<AdminQueries />} />
+        <Route path="contact-requests" element={<AdminContactRequests />} />
         <Route path="faq" element={<AdminFaq />} />
         <Route path="team" element={<AdminTeam />} />
         <Route path="settings" element={<AdminSettings />} />

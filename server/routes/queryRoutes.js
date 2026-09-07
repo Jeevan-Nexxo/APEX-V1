@@ -89,9 +89,12 @@ router.get("/:id", ...ensureAuth, async (req, res) => {
       `SELECT q.id, q.subject, q.message, q.reply, q.replied_at, q.is_read, q.created_at,
               sender.full_name AS sender_name,
               sender.email AS sender_email,
+              sender.role AS sender_role,
+              vp.phone AS sender_phone,
               replier.full_name AS replied_by_name
        FROM queries q
        JOIN users sender ON sender.id = q.user_id
+       LEFT JOIN visitor_profiles vp ON vp.user_id = sender.id
        LEFT JOIN users replier ON replier.id = q.replied_by_user_id
        WHERE q.id = $1`,
       [id]

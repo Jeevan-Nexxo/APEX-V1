@@ -155,6 +155,9 @@ function Team() {
             {photoLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
             Upload Photo
           </Button>
+          <p className="text-xs text-muted-foreground">
+            Recommended 400×400px. Formats: PNG, JPG, JPEG, WEBP. Max 5MB — photos are auto-resized to 400×400.
+          </p>
           {form.photo_url && (
             <div className="flex items-center gap-2">
               <img src={form.photo_url} alt="Preview" className="h-10 w-10 rounded-full object-cover" />

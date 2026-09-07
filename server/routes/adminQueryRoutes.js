@@ -18,9 +18,11 @@ router.get("/", ...ensureAdmin, async (req, res) => {
       `SELECT q.id, q.subject, q.message, q.reply, q.replied_at, q.is_read, q.created_at,
               sender.full_name AS sender_name,
               sender.email AS sender_email,
-              sender.role AS sender_role
+              sender.role AS sender_role,
+              vp.phone AS sender_phone
        FROM queries q
        JOIN users sender ON sender.id = q.user_id
+       LEFT JOIN visitor_profiles vp ON vp.user_id = sender.id
        WHERE ($1 = FALSE OR q.reply IS NOT NULL)
          AND ($2 = FALSE OR q.reply IS NULL)
        ORDER BY CASE WHEN q.reply IS NULL THEN 0 ELSE 1 END, q.created_at DESC`,
@@ -46,7 +48,8 @@ router.post("/:id/reply", ...ensureAdmin, async (req, res) => {
   try {
     const existing = await pool.query(
       `SELECT q.*, sender.full_name AS sender_name,
-              sender.email AS sender_email
+              sender.email AS sender_email,
+              sender.role AS sender_role
        FROM queries q
        JOIN users sender ON sender.id = q.user_id
        WHERE q.id = $1`,
@@ -73,13 +76,14 @@ router.post("/:id/reply", ...ensureAdmin, async (req, res) => {
     );
 
     // Create notification for the user who raised the query
+    const queriesPath = query.sender_role === "visitor" ? "/visitor/queries" : "/student/queries";
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, message, link_url)
        VALUES ($1, 'query-reply', 'Query Answered', $2, $3)`,
       [
         query.user_id,
         `Your query "${query.subject}" has been answered by the APEX admin.`,
-        "/student/queries",
+        queriesPath,
       ]
     );
 
