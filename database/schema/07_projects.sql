@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS projects (
-    id SERIAL PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id VARCHAR(32) NOT NULL UNIQUE,
     title VARCHAR(255) NOT NULL,
     slug VARCHAR(255) UNIQUE,

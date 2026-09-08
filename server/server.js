@@ -89,6 +89,14 @@ const forgotPasswordLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+const resendOtpLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: { success: false, message: "Too many OTP requests. Please try again later." },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Custom JSON error handler
 app.use((err, req, res, next) => {
   if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
@@ -100,7 +108,12 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/uploads", (req, res, next) => {
+  if (req.path.startsWith("/identity-proofs")) {
+    return res.status(403).json({ success: false, message: "Access denied." });
+  }
+  next();
+}, express.static(path.join(__dirname, "uploads")));
 
 app.get("/", (req, res) => {
   res.json({ message: "Welcome to the APEX Backend" });
@@ -121,6 +134,9 @@ app.use("/api/auth", (req, res, next) => {
   }
   if (req.method === "POST" && req.path === "/forgot-password") {
     return forgotPasswordLimiter(req, res, next);
+  }
+  if (req.method === "POST" && req.path === "/resend-otp") {
+    return resendOtpLimiter(req, res, next);
   }
   next();
 }, authRoutes);

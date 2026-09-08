@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import api from "../../services/api";
 
 function Notifications() {
   const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/student/notifications").then((response) => setNotifications(response.data.notifications || [])).catch(console.error);
+    api.get("/student/notifications")
+      .then((response) => setNotifications(response.data.notifications || []))
+      .catch(() => toast.error("Failed to load notifications."))
+      .finally(() => setLoading(false));
   }, []);
 
   const markRead = async (id) => {

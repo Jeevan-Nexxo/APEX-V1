@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { toast } from "sonner";
 import api from "../../services/api";
 import { Badge } from "../../components/ui/badge";
 import { Loader2, ArrowUpDown, ArrowUp, ArrowDown, ClipboardCheck } from "lucide-react";
@@ -13,7 +14,7 @@ function Reviews() {
   useEffect(() => {
     api.get("/admin/reviews")
       .then((res) => setReviews(res.data.reviews || []))
-      .catch(() => {})
+      .catch(() => toast.error("Failed to load reviews."))
       .finally(() => setLoading(false));
   }, []);
 

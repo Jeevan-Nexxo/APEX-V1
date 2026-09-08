@@ -143,8 +143,8 @@ const seedDemoProject = async () => {
       `INSERT INTO projects
        (project_id, title, slug, problem_statement, solution, description, abstract,
         technologies, tags, github_link, demo_link, status, created_by_user_id,
-        reviewed_by_user_id, review_notes, approved_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'approved', $12, $13, $14, NOW())
+        reviewed_by_user_id, review_notes, approved_at, is_featured, is_public)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'approved', $12, $13, $14, NOW(), TRUE, TRUE)
        RETURNING id`,
       [
         "APX-DEMO-000001",
@@ -207,6 +207,47 @@ const seedDemoProject = async () => {
   }
 };
 
+const seedFAQ = async () => {
+  const existing = await pool.query(`SELECT id FROM faq_categories LIMIT 1`);
+  if (existing.rows.length > 0) {
+    console.log("✓ FAQ already seeded, skipping");
+    return;
+  }
+
+  const cat1 = await pool.query(
+    `INSERT INTO faq_categories (title, description, sort_order) VALUES ($1, $2, $3) RETURNING id`,
+    ["Getting Started", "Learn how to get started with APEX", 1]
+  );
+  const cat2 = await pool.query(
+    `INSERT INTO faq_categories (title, description, sort_order) VALUES ($1, $2, $3) RETURNING id`,
+    ["Account & Profile", "Manage your account settings and profile", 2]
+  );
+  const cat3 = await pool.query(
+    `INSERT INTO faq_categories (title, description, sort_order) VALUES ($1, $2, $3) RETURNING id`,
+    ["Projects", "Everything about creating and managing projects", 3]
+  );
+
+  const faqItems = [
+    { catId: cat1.rows[0].id, q: "What is APEX?", a: "APEX is a collaborative platform for students and researchers to showcase, share, and discover innovative projects across various technology domains.", order: 1 },
+    { catId: cat1.rows[0].id, q: "How do I create an account?", a: "Click the Register button on the homepage, choose your account type (Student or Visitor), fill in the required details, verify your email, and you're ready to go!", order: 2 },
+    { catId: cat1.rows[0].id, q: "Is APEX free to use?", a: "Yes, APEX is completely free for all users. Students can showcase their projects, and visitors can explore and connect with project creators.", order: 3 },
+    { catId: cat2.rows[0].id, q: "How do I update my profile?", a: "Navigate to your Dashboard, click on Profile in the sidebar, and use the edit form to update your information.", order: 1 },
+    { catId: cat2.rows[0].id, q: "How do I change my password?", a: "Go to Settings in your dashboard sidebar. You can update your password from the account settings section.", order: 2 },
+    { catId: cat3.rows[0].id, q: "How do I submit a project?", a: "As a student, navigate to Submit Project from your dashboard sidebar. Fill in the project details including title, description, technologies, and category, then submit for review.", order: 1 },
+    { catId: cat3.rows[0].id, q: "How long does project review take?", a: "Project reviews are typically completed within 24-48 hours. You'll receive a notification once your project has been reviewed.", order: 2 },
+    { catId: cat3.rows[0].id, q: "Can I edit my project after submission?", a: "Yes, you can edit your project at any time from My Projects in your dashboard. Changes to approved projects may require re-review.", order: 3 },
+  ];
+
+  for (const item of faqItems) {
+    await pool.query(
+      `INSERT INTO faq_items (category_id, question, answer, sort_order) VALUES ($1, $2, $3, $4)`,
+      [item.catId, item.q, item.a, item.order]
+    );
+  }
+
+  console.log("✓ FAQ seeded (3 categories, 8 items)");
+};
+
 const applySchema = async () => {
   const files = fs
     .readdirSync(SCHEMA_DIR)
@@ -238,7 +279,10 @@ const main = async () => {
     if (runSchema) await applySchema();
     if (!only.projects) await seedUsers();
     if (!only.users && !only.projects) await seedCategories();
-    if (!only.users && !only.categories) await seedDemoProject();
+    if (!only.users && !only.categories) {
+      await seedDemoProject();
+      await seedFAQ();
+    }
 
     console.log("✓ Seed complete");
   } catch (error) {

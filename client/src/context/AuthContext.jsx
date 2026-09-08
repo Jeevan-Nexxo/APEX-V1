@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import api from "../services/api";
 
 const AuthContext = createContext(null);
 
@@ -29,12 +30,20 @@ export function AuthProvider({ children }) {
     setUser(user);
   };
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-  };
+  const logout = useCallback(async () => {
+    try {
+      if (token) {
+        await api.post("/auth/logout");
+      }
+    } catch {
+      // Logout even if server call fails
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      setToken(null);
+      setUser(null);
+    }
+  }, [token]);
 
   const isAuthenticated = !!token;
 

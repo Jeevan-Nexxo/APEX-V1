@@ -361,7 +361,7 @@ const forgotPassword = async (req, res) => {
     }
 
     const userResult = await pool.query(
-      "SELECT id, full_name FROM users WHERE email = $1",
+      "SELECT id, full_name, email FROM users WHERE email = $1",
       [email.toLowerCase().trim()]
     );
 

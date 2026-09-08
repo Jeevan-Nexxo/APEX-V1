@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import api from "../../services/api";
 import { Button } from "../../components/ui/button";
 import { Home } from "lucide-react";
@@ -7,12 +8,17 @@ import { Home } from "lucide-react";
 function Dashboard() {
   const navigate = useNavigate();
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/visitor/dashboard").then((response) => setData(response.data)).catch(console.error);
+    api.get("/visitor/dashboard")
+      .then((response) => setData(response.data))
+      .catch(() => toast.error("Failed to load dashboard data."))
+      .finally(() => setLoading(false));
   }, []);
 
-  if (!data) return <div className="text-sm text-muted-foreground">Loading dashboard...</div>;
+  if (loading) return <div className="text-sm text-muted-foreground">Loading dashboard...</div>;
+  if (!data) return <div className="text-sm text-muted-foreground">Failed to load dashboard.</div>;
 
   const stats = [
     { label: "Approved projects", value: data.stats.approvedProjects, icon: "✅" },

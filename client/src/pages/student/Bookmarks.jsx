@@ -1,17 +1,27 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import api from "../../services/api";
 
 function Bookmarks() {
   const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("/student/bookmarks").then((response) => setBookmarks(response.data.bookmarks || [])).catch(console.error);
+    api.get("/student/bookmarks")
+      .then((response) => setBookmarks(response.data.bookmarks || []))
+      .catch(() => toast.error("Failed to load bookmarks."))
+      .finally(() => setLoading(false));
   }, []);
 
   const removeBookmark = async (projectId) => {
-    await api.delete(`/student/bookmarks/${projectId}`);
-    setBookmarks((current) => current.filter((item) => item.id !== projectId));
+    try {
+      await api.delete(`/student/bookmarks/${projectId}`);
+      setBookmarks((current) => current.filter((item) => item.id !== projectId));
+      toast.success("Bookmark removed.");
+    } catch {
+      toast.error("Failed to remove bookmark.");
+    }
   };
 
   return (
@@ -22,7 +32,9 @@ function Bookmarks() {
       </div>
 
       <div className="grid gap-4">
-        {bookmarks.length === 0 ? (
+        {loading ? (
+          <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">Loading bookmarks...</div>
+        ) : bookmarks.length === 0 ? (
           <div className="rounded-2xl border border-border bg-card p-6 text-sm text-muted-foreground">No bookmarks yet.</div>
         ) : bookmarks.map((bookmark) => (
           <div key={bookmark.bookmark_id} className="rounded-2xl border border-border bg-card p-5">
